@@ -1,0 +1,4 @@
+data/yelpchi.parquet filter=lfs diff=lfs merge=lfs -text
+data/yelpchi_rsr.npy filter=lfs diff=lfs merge=lfs -text
+data/yelpchi_rtr.npy filter=lfs diff=lfs merge=lfs -text
+data/yelpchi_rur.npy filter=lfs diff=lfs merge=lfs -text
