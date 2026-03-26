@@ -27,30 +27,48 @@ def recall_at_k(y_true, y_pred_score):
     return float(sum(y_true[top_k_idx]) / sum(y_true))
 
 
-def evaluate_model(model_name, y_true, y_pred, y_pred_score):
+def evaluate_model(
+    model_name: str,
+    y_true: List[float],
+    y_pred: List[int],
+    y_pred_score: List[float],
+    show_classification_metrics: List[str] = ["Precision", "Recall"],
+    show_ranking_metrics: List[str] = ["AUPRC", "Rec@K"],
+    average: str = 'macro avg',
+):
     """Evaluate single model and save metrics."""
-    print(classification_report(y_true, y_pred))
+    classification_metrics = classification_report(y_true, y_pred, output_dict=True)
 
-    metrics = pd.DataFrame(
-        {
-            'AUPRC': [average_precision_score(y_true, y_pred_score)],
-            'AUC': [roc_auc_score(y_true, y_pred_score)],
-            'Rec@K': [recall_at_k(y_true, y_pred_score)],
-        }
-    )
-    display(metrics)
+    ranking_metrics = pd.DataFrame({
+        'AUPRC': [average_precision_score(y_true, y_pred_score)],
+        'AUC': [roc_auc_score(y_true, y_pred_score)],
+        'Rec@K': [recall_at_k(y_true, y_pred_score)],
+    })
+
+    metrics = {}
+    if show_classification_metrics is not None:
+        for m in show_classification_metrics:
+            metrics[m] = classification_metrics[average][m.lower()]
+
+    if show_ranking_metrics is not None:
+        for m in show_ranking_metrics:
+            metrics[m] = ranking_metrics[m]
+
+    if len(metrics) > 0:
+        display(pd.DataFrame(metrics))
 
     return EvaluationMetrics(
-        model_name, classification_report(y_true, y_pred, output_dict=True), metrics
+        model_name, classification_metrics, ranking_metrics
     )
 
 
 def compare_models(
     eval_metrics_list: List[EvaluationMetrics],
-    average: str = 'weighted avg',
+    metrics: List[str] = ["Precision", "Recall", "AUPRC", "Rec@K"],
+    average: str = 'macro avg',
     show_table: bool = True,
     show_plot: bool = True,
-    figsize=(12, 5),
+    figsize=None,
 ):
     """Compare multiple models at once."""
     rows = []
@@ -79,18 +97,19 @@ def compare_models(
 
     comparison_df = pd.DataFrame(rows).set_index('Model')
 
-    wanted = ['Accuracy', 'Precision', 'Recall', 'F1', 'AUPRC', 'AUC', 'Rec@K']
-    for c in wanted:
+    for c in metrics:
         if c not in comparison_df.columns:
             comparison_df[c] = np.nan
-    comparison_df = comparison_df[wanted]
+    comparison_df = comparison_df[metrics]
 
     if show_table:
-        display(comparison_df.style.highlight_max(axis=0, color='darkgreen'))
+        display(comparison_df.style.highlight_max(axis=0, color='lightgreen'))
 
     fig, ax = None, None
     if show_plot:
-        metrics = wanted
+        if figsize is None:
+            figsize = (len(eval_metrics_list) * 3, 3.5)
+
         models = comparison_df.index.tolist()
         values = comparison_df[metrics].to_numpy(dtype=float)
 
@@ -119,4 +138,5 @@ def compare_models(
         plt.tight_layout()
         plt.show()
 
-    return comparison_df, fig, ax
+    if not show_table and not show_plot:
+        return comparison_df, fig, ax
