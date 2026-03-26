@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,6 +11,17 @@ from sklearn.ensemble import IsolationForest, RandomForestClassifier, GradientBo
 
 from ml_prague_2026 import losses as custom_losses
 from ml_prague_2026 import gnn as gnn_models
+
+
+def train_chart(history):
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
+
+    axes[0].plot(history['train_loss'], label='Train loss')
+    axes[0].plot(history['val_loss'], label='Val loss', alpha=0.85)
+    axes[0].set(xlabel='Epoch', ylabel='Loss', title='Training vs validation loss')
+    axes[0].legend()
+    plt.tight_layout()
+    plt.show();
 
 
 def get_anomalies_from_embeddings(embeddings, contamination, random_seed=42):
@@ -190,10 +202,13 @@ class UnsupervisedGCN:
 
 class SupervisedBWGNN:
     def __init__(self, in_feats, h_feats, num_classes, edge_index, num_nodes,
-                 d=2, lr=0.01, alpha=0.9, gamma=2.0):
-        norm_adj = gnn_models.precompute_norm_adj(edge_index, num_nodes)
-        self.model = gnn_models.BWGNN(in_feats, h_feats, num_classes, norm_adj, d=d)
+                 d=2, dropout=0.0, lr=0.01, alpha=0.9, gamma=2.0, device='cpu'):
+        self.device = device
+        norm_adj = gnn_models.precompute_norm_adj(edge_index, num_nodes).to(device)
+        self.model = gnn_models.BWGNN(in_feats, h_feats, num_classes, norm_adj, d=d, dropout=dropout).to(device)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
+        if isinstance(alpha, torch.Tensor):
+            alpha = alpha.to(device)
         self.criterion = custom_losses.FocalLoss(alpha=alpha, gamma=gamma)
         self.history = {'loss': [], 'train_f1': [], 'val_f1': []}
 

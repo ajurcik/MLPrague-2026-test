@@ -108,7 +108,7 @@ def compare_models(
     fig, ax = None, None
     if show_plot:
         if figsize is None:
-            figsize = (len(eval_metrics_list) * 3, 3.5)
+            figsize = (2 + len(eval_metrics_list) * 1.5, 3.5)
 
         models = comparison_df.index.tolist()
         values = comparison_df[metrics].to_numpy(dtype=float)
@@ -132,7 +132,7 @@ def compare_models(
         ax.set_ylim(0, 1.05)
         ax.set_ylabel("Score")
         ax.set_title("Model comparison across evaluation metrics")
-        ax.legend(loc="best")
+        ax.legend(loc="center left", bbox_to_anchor=(1, 0.5))
         ax.grid(True, axis="y", alpha=0.3)
 
         plt.tight_layout()

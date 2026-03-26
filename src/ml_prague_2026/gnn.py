@@ -32,8 +32,8 @@ class GraphSAGE(torch.nn.Module):
 # BWGNN
 def precompute_norm_adj(edge_index, num_nodes):
     row, col = edge_index
-    deg = torch.zeros(num_nodes, dtype=torch.float)
-    deg.scatter_add_(0, row, torch.ones(row.shape[0]))
+    deg = torch.zeros(num_nodes, dtype=torch.float, device=row.device)
+    deg.scatter_add_(0, row, torch.ones(row.shape[0], device=row.device))
     deg_inv_sqrt = deg.clamp(min=1).pow(-0.5)
 
     weights = deg_inv_sqrt[row] * deg_inv_sqrt[col]
@@ -73,9 +73,10 @@ def calculate_theta2(d):
 
 
 class BWGNN(nn.Module):
-    def __init__(self, in_feats, h_feats, num_classes, norm_adj, d=2):
+    def __init__(self, in_feats, h_feats, num_classes, norm_adj, d=2, dropout=0.0):
         super().__init__()
         self.norm_adj = norm_adj
+        self.dropout_rate = dropout
         self.thetas = calculate_theta2(d=d)
         self.conv = nn.ModuleList(
             [PolyConv(theta) for theta in self.thetas]
@@ -87,10 +88,10 @@ class BWGNN(nn.Module):
         self.act = nn.ReLU()
 
     def forward(self, in_feat):
-        h = self.act(self.linear(in_feat))
-        h = self.act(self.linear2(h))
+        h = F.dropout(self.act(self.linear(in_feat)), p=self.dropout_rate, training=self.training)
+        h = F.dropout(self.act(self.linear2(h)), p=self.dropout_rate, training=self.training)
         h_parts = []
         for conv in self.conv:
             h_parts.append(conv(self.norm_adj, h))
-        h = self.act(self.linear3(torch.cat(h_parts, dim=-1)))
+        h = F.dropout(self.act(self.linear3(torch.cat(h_parts, dim=-1))), p=self.dropout_rate, training=self.training)
         return self.linear4(h)
