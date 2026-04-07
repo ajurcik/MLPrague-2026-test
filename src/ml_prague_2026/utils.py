@@ -2,7 +2,7 @@ import torch
 from sklearn.model_selection import train_test_split
 
 
-def stratified_node_split(data, train_ratio=0.7, val_ratio=0.1):
+def stratified_node_split(data, train_ratio=0.7, val_ratio=0.1, seed=1):
     indices = torch.arange(data.num_nodes)
     labels = data.y.numpy()
 
@@ -10,7 +10,7 @@ def stratified_node_split(data, train_ratio=0.7, val_ratio=0.1):
         indices, 
         train_size=train_ratio, 
         stratify=labels, 
-        random_state=42
+        random_state=seed
     )
 
     remaining_labels = labels[remaining_idx]
@@ -21,7 +21,7 @@ def stratified_node_split(data, train_ratio=0.7, val_ratio=0.1):
         remaining_idx, 
         train_size=val_relative_ratio, 
         stratify=remaining_labels, 
-        random_state=42
+        random_state=seed
     )
 
     train_mask = torch.zeros(data.num_nodes, dtype=torch.bool)

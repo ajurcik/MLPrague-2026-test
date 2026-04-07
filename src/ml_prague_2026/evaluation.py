@@ -55,7 +55,7 @@ def evaluate_model(
             metrics[m] = ranking_metrics[m]
 
     if len(metrics) > 0:
-        display(pd.DataFrame(metrics))
+        display(pd.DataFrame(metrics).round(3))
 
     return EvaluationMetrics(
         model_name, classification_metrics, ranking_metrics
@@ -103,7 +103,7 @@ def compare_models(
     comparison_df = comparison_df[metrics]
 
     if show_table:
-        display(comparison_df.style.highlight_max(axis=0, color='lightgreen'))
+        display(comparison_df.style.format("{:.3f}").highlight_max(axis=0, color='seagreen'))
 
     fig, ax = None, None
     if show_plot:

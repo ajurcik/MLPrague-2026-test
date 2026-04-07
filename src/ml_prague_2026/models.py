@@ -14,12 +14,11 @@ from ml_prague_2026 import gnn as gnn_models
 
 
 def train_chart(history):
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4))
-
-    axes[0].plot(history['train_loss'], label='Train loss')
-    axes[0].plot(history['val_loss'], label='Val loss', alpha=0.85)
-    axes[0].set(xlabel='Epoch', ylabel='Loss', title='Training vs validation loss')
-    axes[0].legend()
+    fig, axes = plt.subplots(1, 1, figsize=(6, 3))
+    axes.plot(history['train_loss'], label='Train loss')
+    axes.plot(history['val_loss'], label='Val loss', alpha=0.85)
+    axes.set(xlabel='Epoch', ylabel='Loss', title='Training vs validation loss')
+    axes.legend()
     plt.tight_layout()
     plt.show();
 
