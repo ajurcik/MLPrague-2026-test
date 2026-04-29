@@ -9,12 +9,7 @@ from sklearn.model_selection import train_test_split
 from torch_geometric.utils import degree as pyg_degree
 
 
-YELP_CHI_EDGE_RSR_PATH = 'MLPrague-2026-test/data/yelpchi_rsr.npy'
-YELP_CHI_EDGE_RTR_PATH = 'MLPrague-2026-test/data/yelpchi_rtr.npy'
-YELP_CHI_EDGE_RUR_PATH = 'MLPrague-2026-test/data/yelpchi_rur.npy'
-
-
-def prepare_yelp_chi_tabular_data(yelp_chi, train_split, test_split, add_degree_feature: bool = True):
+def prepare_yelp_chi_tabular_data(yelp_chi, train_split, test_split, add_degree_feature: bool = True, edge_paths=None):
     """Prepare train/test features and labels for Yelp-Chi in tabular form.
 
     Args:
@@ -29,7 +24,7 @@ def prepare_yelp_chi_tabular_data(yelp_chi, train_split, test_split, add_degree_
     X = yelp_chi[feature_cols].values
     y_true = yelp_chi['spam'].values
 
-    if add_degree_feature:
+    if add_degree_feature and edge_paths:
         def undirected_degree(edge_index: torch.Tensor, num_nodes: int) -> np.ndarray:
             """Sum degrees from both directions to handle undirected edges."""
             return (
@@ -38,11 +33,6 @@ def prepare_yelp_chi_tabular_data(yelp_chi, train_split, test_split, add_degree_
             ).numpy()
 
         n_nodes = len(yelp_chi)
-        edge_paths = {
-            "rur": YELP_CHI_EDGE_RUR_PATH,
-            "rsr": YELP_CHI_EDGE_RSR_PATH,
-            "rtr": YELP_CHI_EDGE_RTR_PATH,
-        }
 
         degree_features = []
         for path in edge_paths.values():
@@ -50,6 +40,8 @@ def prepare_yelp_chi_tabular_data(yelp_chi, train_split, test_split, add_degree_
             degree_features.append(undirected_degree(edgs, n_nodes)[:, None])
 
         X = np.concatenate([X, *degree_features], axis=1)
+    else:
+        print("No edge paths - skipping degree features...")
 
     X_train, X_test = X[train_split], X[test_split]
     y_train, y_test = y_true[train_split], y_true[test_split]
