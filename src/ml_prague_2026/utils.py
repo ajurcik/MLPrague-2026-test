@@ -9,6 +9,11 @@ from sklearn.model_selection import train_test_split
 from torch_geometric.utils import degree as pyg_degree
 
 
+YELP_CHI_EDGE_RSR_PATH = 'MLPrague-2026-test/data/yelpchi_rsr.npy'
+YELP_CHI_EDGE_RTR_PATH = 'MLPrague-2026-test/data/yelpchi_rtr.npy'
+YELP_CHI_EDGE_RUR_PATH = 'MLPrague-2026-test/data/yelpchi_rur.npy'
+
+
 def prepare_yelp_chi_tabular_data(yelp_chi, train_split, test_split, add_degree_feature: bool = True):
     """Prepare train/test features and labels for Yelp-Chi in tabular form.
 
