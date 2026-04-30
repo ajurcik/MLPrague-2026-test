@@ -1,9 +1,4 @@
 networkx
-pygod
-torch==2.8.0
 torch-geometric
-umap-learn
 
 -f https://data.pyg.org/whl/torch-2.8.0+cu128.html
-torch-scatter
-torch-sparse
