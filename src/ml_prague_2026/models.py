@@ -14,6 +14,7 @@ from ml_prague_2026 import gnn as gnn_models
 
 
 def train_chart(history):
+    print()
     fig, axes = plt.subplots(1, 1, figsize=(6, 3))
     axes.plot(history['train_loss'], label='Train loss')
     axes.plot(history['val_loss'], label='Val loss', alpha=0.85)

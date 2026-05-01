@@ -49,41 +49,44 @@ def prepare_yelp_chi_tabular_data(yelp_chi, train_split, test_split, add_degree_
     return X_train, X_test, y_train, y_test
 
 
-def stratified_node_split(data, train_ratio=0.7, val_ratio=0.1, seed=1):
-    indices = torch.arange(data.num_nodes)
-    labels = data.y.numpy()
+def create_undirected_edge_index(edges_array):
+    """Create undirected edge_index from a numpy array of edges of shape (num_edges, 2)."""
+    src = torch.tensor(edges_array[:, 0], dtype=torch.long)
+    dst = torch.tensor(edges_array[:, 1], dtype=torch.long)
+    # Add reverse edges to make it undirected
+    edge_index = torch.stack([torch.cat([src, dst]), torch.cat([dst, src])], dim=0)
+    return edge_index.contiguous()
 
-    train_idx, remaining_idx = train_test_split(
-        indices, 
-        train_size=train_ratio, 
-        stratify=labels, 
-        random_state=seed
+
+def stratified_split_indices(y, train_ratio=0.7, val_ratio=0.1, seed=1):
+    """Stratified train/val/test split over node indices.
+
+    Returns (idx_train, idx_val, idx_test) as numpy arrays.
+    """
+    y = np.asarray(y)
+    all_idx = np.arange(len(y))
+
+    idx_train, idx_remaining = train_test_split(
+        all_idx, train_size=train_ratio, stratify=y, random_state=seed,
     )
 
-    remaining_labels = labels[remaining_idx]
-    
     val_relative_ratio = val_ratio / (1 - train_ratio)
-    
-    val_idx, test_idx = train_test_split(
-        remaining_idx, 
-        train_size=val_relative_ratio, 
-        stratify=remaining_labels, 
-        random_state=seed
+
+    idx_val, idx_test = train_test_split(
+        idx_remaining,
+        train_size=val_relative_ratio,
+        stratify=y[idx_remaining],
+        random_state=seed,
     )
 
-    train_mask = torch.zeros(data.num_nodes, dtype=torch.bool)
-    val_mask = torch.zeros(data.num_nodes, dtype=torch.bool)
-    test_mask = torch.zeros(data.num_nodes, dtype=torch.bool)
+    return idx_train, idx_val, idx_test
 
-    train_mask[train_idx] = True
-    val_mask[val_idx] = True
-    test_mask[test_idx] = True
 
-    data.train_mask = train_mask
-    data.val_mask = val_mask
-    data.test_mask = test_mask
-    
-    return data
+def indices_to_mask(indices, num_nodes):
+    """Boolean mask tensor of length `num_nodes` with True at `indices`."""
+    mask = torch.zeros(num_nodes, dtype=torch.bool)
+    mask[indices] = True
+    return mask
 
 
 def sample_pinsage_neighbors(

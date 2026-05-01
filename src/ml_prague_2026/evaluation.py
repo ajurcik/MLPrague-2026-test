@@ -103,7 +103,7 @@ def compare_models(
     comparison_df = comparison_df[metrics]
 
     if show_table:
-        display(comparison_df.style.format("{:.3f}").highlight_max(axis=0, color='seagreen'))
+        display(comparison_df.style.format("{:.3f}").highlight_max(axis=0, color='#008F39'))
 
     fig, ax = None, None
     if show_plot:
